@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\JsonResponse;
 
 class RegisteredUserController extends Controller
 {
@@ -19,24 +17,36 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): Response
+    public function store(RegisterRequest $request): JsonResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $data = $request->validated();
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->string('password')),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+
+            'phone' => $data['phone'],
+            'blood_type' => $data['blood_type'],
+
+            'latitude' => $data['address']['latitude'],
+            'longitude' => $data['address']['longitude'],
+            'address_text' => $data['address']['address_text'],
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->noContent();
+        return response()->json([
+            'message' => 'Registration successful',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'blood_type' => $user->blood_type,
+            ],
+            'token' => $token,
+        ], 201);
     }
 }
