@@ -18,6 +18,18 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+
+            $table->string('phone');
+            $table->string('blood_type');
+
+            $table->decimal('latitude', 10, 8);
+            $table->decimal('longitude', 11, 8);
+            $table->string('address_text', 255);
+
+            $table->timestamp('last_donation_at')->nullable();
+            $table->unsignedInteger('no_of_donations')->default(0);
+            $table->boolean('is_available')->default(true);
+
             $table->timestamps();
         });
 
