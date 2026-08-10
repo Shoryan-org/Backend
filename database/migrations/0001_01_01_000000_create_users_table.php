@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
 
-            $table->string('phone');
+            $table->string('phone')->unique();
             $table->string('blood_type');
 
             $table->decimal('latitude', 10, 8);
