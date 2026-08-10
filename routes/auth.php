@@ -1,37 +1,49 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\ResendRegistrationOtpController;
+use App\Http\Controllers\Auth\ResendPasswordResetOtpController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\VerifyPasswordResetOtpController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [RegisteredUserController::class, 'store'])
-    ->middleware('guest')
-    ->name('register');
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->middleware('guest')
+        ->name('register');
 
-Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('guest')
-    ->name('login');
+    Route::post('/register/verify-email', [VerifyEmailController::class, 'verify'])
+        ->middleware(['guest', 'throttle:6,1'])
+        ->name('verification.verify');
 
-Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-    ->middleware('guest')
-    ->name('password.email');
+    Route::post('/resend-registration-otp', ResendRegistrationOtpController::class)
+        ->middleware('throttle:1,1')
+        ->name('resend-registration-otp');
 
-Route::post('/reset-password', [NewPasswordController::class, 'store'])
-    ->middleware('guest')
-    ->name('password.store');
+    Route::post('/resend-password-reset-otp', ResendPasswordResetOtpController::class)
+        ->middleware('throttle:1,1')
+        ->name('resend-password-reset-otp');
 
-Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
-    ->name('verification.verify');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('guest')
+        ->name('login');
 
-Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-    ->middleware(['auth', 'throttle:6,1'])
-    ->name('verification.send');
+    Route::delete('/logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->middleware('auth:sanctum')
+        ->name('logout');
 
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
+    Route::post('/forgot-password', ForgotPasswordController::class)
+        ->middleware('guest', 'throttle:3,1')
+        ->name('forgot-password');
+
+    Route::post('/verify-password-reset', VerifyPasswordResetOtpController::class)
+        ->middleware('guest', 'throttle:5,1')
+        ->name('verify-password-reset');
+
+    Route::post('/password-reset', ResetPasswordController::class)
+        ->middleware('guest', 'throttle:5,1')
+        ->name('password-reset');
+});
