@@ -4,19 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ResendOtpRequest;
-use App\Mail\SendOtpMail;
+use App\Mail\SendPasswordResetOtpMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
-class ResendOtpController extends Controller
+class ResendPasswordResetOtpController extends Controller
 {
     public function __invoke(ResendOtpRequest $request): JsonResponse
     {
         $verificationId = $request->verification_id;
 
-        $cacheKey = 'registration_' . $verificationId;
+        $cacheKey = 'password_reset_' . $verificationId;
 
         $cachedData = Cache::get($cacheKey);
 
@@ -36,8 +36,8 @@ class ResendOtpController extends Controller
             now()->addMinutes(3)
         );
 
-        Mail::to($cachedData['userdata']['email'])
-            ->send(new SendOtpMail($otp));
+        Mail::to($cachedData['email'])
+            ->send(new SendPasswordResetOtpMail($otp));
 
         return response()->json([
             'message' => 'A new OTP has been sent to your email.',

@@ -9,7 +9,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\SendOtpMail;
+use App\Mail\SendRegistrationOtpMail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
@@ -37,7 +37,7 @@ class RegisteredUserController extends Controller
 
         Cache::put($cacheKey, ['userdata' => $data, 'otp'  => Hash::make($otp)], now()->addMinutes(3));
 
-        Mail::to($data['email'])->send(new SendOtpMail($otp));
+        Mail::to($data['email'])->send(new SendRegistrationOtpMail($otp));
 
         return response()->json([
             'message' => 'OTP sent to your email. Please verify to complete registration.',
