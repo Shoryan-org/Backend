@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Enums\BloodRequestUrgency;
 
 class StoreBloodRequestRequest extends FormRequest
 {
@@ -12,7 +14,7 @@ class StoreBloodRequestRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,17 +25,18 @@ class StoreBloodRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
-              $valid=$request->validate([
-            "blood_type"=>'required|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
-            "no_of_units"=>'required|integer|min:1',
-             "hospital_name"=>'required|string',
-              "longitude"=>'required|string',
-              "latitude"=>'required|string',
-              "urgency"=>'required|string|in:EMERGENCY,URGENT,PLANNED',
-              "address_text"=>'required|string',
-              "notes"=>'nullable|string',
-        ]);
+            "blood_type" => 'required|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            "no_of_units" => 'required|integer|min:1',
+            'urgency' => [
+                'required',
+                Rule::enum(BloodRequestUrgency::class),
+            ],
+            "notes" => 'nullable|string|max:1000',
+            'hospital' => ['required', 'array'],
+            'hospital.name' => ['required', 'string', 'max:255'],
+            'hospital.latitude' => ['required', 'numeric', 'between:-90,90'],
+            'hospital.longitude' => ['required', 'numeric', 'between:-180,180'],
+            'hospital.address_text' => ['required', 'string', 'max:255'],
         ];
     }
 }
