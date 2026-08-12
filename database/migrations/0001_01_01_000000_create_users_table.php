@@ -20,7 +20,7 @@ return new class extends Migration
             $table->rememberToken();
 
             $table->string('phone')->unique();
-            $table->string('blood_type');
+            $table->enum('blood_type', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
 
             $table->decimal('latitude', 10, 8);
             $table->decimal('longitude', 11, 8);

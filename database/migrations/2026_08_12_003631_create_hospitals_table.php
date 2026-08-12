@@ -11,16 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('Hospitals',function(Blueprint $table){
-        $table->id();
-          $table->string('name');
-           $table->Decimal('latitude');
-            $table->Decimal('longitude');
-             $table->String('address_text');
-              $table->foreignId('address_id')->constrained();
-              $table->string('notes');
-                $table->timestamps();
-               
+        Schema::create('hospitals', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->Decimal('latitude', 10, 8);
+            $table->Decimal('longitude', 11, 8);
+            $table->string('address_text');
+            $table->timestamps();
         });
     }
 

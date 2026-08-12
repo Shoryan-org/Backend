@@ -6,33 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-      Schema::create('blood_request',function(Blueprint $table){
-        $table->id();
-          $table->enum('blood_type',['A+','A-','B+','B-','AB+','AB-','O+','O-']);
-           $table->enum('status',['PENDING','CANCELLED','FULLFILLED'])->default('PENDING');
-            $table->enum('urgency',['EMERGENCY','URGENT','PLANNED']);
-             $table->integer('no_of_units');
-              $table->foreignId('address_id')->constrained();
-              $table->string('notes');
-               $table->foreignId('user_id')->constrained();
-                $table->foreignId('hospital_id')->constrained();
-                $table->timestamps();
-               
-      });
-    }
+  /**
+   * Run the migrations.
+   */
+  public function up(): void
+  {
+    Schema::create('blood_requests', function (Blueprint $table) {
+      $table->id();
+      $table->foreignId('requester_id')->constrained('users')->cascadeOnDelete();
+      $table->foreignId('hospital_id')->constrained();
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        //
-        Schema::dropIfExists('blood_request');
-        
-    }
+      $table->enum('blood_type', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
+      $table->enum('status', ['PENDING', 'CANCELLED', 'FULFILLED'])->default('PENDING');
+      $table->enum('urgency', ['EMERGENCY', 'URGENT', 'PLANNED']);
+      $table->unsignedInteger('no_of_units');
+      $table->text('notes')->nullable();
+
+      $table->timestamps();
+    });
+  }
+
+  /**
+   * Reverse the migrations.
+   */
+  public function down(): void
+  {
+    //
+    Schema::dropIfExists('blood_requests');
+  }
 };
