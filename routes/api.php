@@ -15,4 +15,4 @@ Route::get('/test', function () {
 });
 Route::middleware(['auth:sanctum'])->post('/chatbot',[ChatbotController::class,'sendMessage']);
 Route::middleware(['auth:sanctum'])->get('/chatbot/messages',[ChatbotController::class,'retrieveMessages']);
-
+س
