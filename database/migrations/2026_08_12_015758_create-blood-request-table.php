@@ -20,6 +20,7 @@ return new class extends Migration
       $table->enum('status', ['PENDING', 'CANCELLED', 'FULFILLED'])->default('PENDING');
       $table->enum('urgency', ['EMERGENCY', 'URGENT', 'PLANNED']);
       $table->unsignedInteger('no_of_units');
+      $table->unsignedInteger('no_of_units_donated')->default(0);
       $table->text('notes')->nullable();
 
       $table->timestamps();
