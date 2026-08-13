@@ -40,13 +40,11 @@ class BloodRequest extends Model
     {
         return $this->belongsTo(Hospital::class);
     }
-<<<<<<< HEAD
-=======
+
 
     public function notifications(): HasMany
 {
     return $this->hasMany(Notification::class);
 }
 
->>>>>>> e3b7d0d (Implement notifications API)
 }
