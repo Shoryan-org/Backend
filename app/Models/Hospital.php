@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Hospital extends Model
 {
-    public function hospital(){
-    return $this->belongsTo(Hospital::class);
-}
-public function hospital(){
-    return $this->hasMany(BloodRequest::class);
-}
+    protected $fillable = [
+        'name',
+        'latitude',
+        'longitude',
+        'address_text',
+    ];
 }

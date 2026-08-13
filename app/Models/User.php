@@ -41,10 +41,4 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
-    public function bloodRequests(){
-    return $this->hasMany(BloodRequest::class);
-}
-  public function messages(){
-    return $this->hasMany(Message::class);
-}
 }
