@@ -10,6 +10,7 @@ use App\Models\Hospital;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\IndexBloodRequestRequest;
+use App\Http\Resources\BloodRequestResource;
 
 class BloodRequestController extends Controller
 {
@@ -116,7 +117,7 @@ class BloodRequestController extends Controller
 
         return response()->json([
             'message' => 'Blood requests retrieved successfully.',
-            'data' => $bloodRequests,
+            'data' => BloodRequestResource::collection($bloodRequests),
         ]);
     }
 }
