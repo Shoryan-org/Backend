@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\BloodRequestStatus;
 use App\Enums\BloodRequestUrgency;
 
@@ -39,4 +40,12 @@ class BloodRequest extends Model
     {
         return $this->belongsTo(Hospital::class);
     }
+
+
+    public function notifications(): HasMany
+{
+    return $this->hasMany(Notification::class);
+}
+
+}
 }
