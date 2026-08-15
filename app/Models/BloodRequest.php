@@ -29,6 +29,8 @@ class BloodRequest extends Model
         'urgency',
         'no_of_units',
         'notes',
+        'no_of_units_donated',
+        'status',
     ];
 
     public function requester(): BelongsTo
@@ -50,5 +52,10 @@ class BloodRequest extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class);
+    }
+
+    public function donations(): HasMany
+    {
+        return $this->hasMany(Donation::class);
     }
 }

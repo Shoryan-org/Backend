@@ -6,6 +6,7 @@ use App\Http\Controllers\BloodRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ResponseController;
+use App\Http\Controllers\DonationController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/auth/me', RegisteredUserDataController::class)->name('auth.me');
@@ -17,6 +18,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/blood-requests/{bloodRequest}/reject', [ResponseController::class, 'reject'])->name('blood-requests.reject');
 
     Route::get('/responses/accepted', [ResponseController::class, 'accepted'])->name('responses.accepted');
+    Route::post('/blood-requests/{bloodRequest}/donate', [DonationController::class, 'store'])->name('blood-requests.donate');
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);

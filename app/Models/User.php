@@ -23,6 +23,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'longitude',
     'address_text',
     'email_verified_at',
+    'last_donation_at',
+    'no_of_donations',
+    'is_available',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
@@ -40,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_donation_at' => 'datetime',
         ];
     }
 
@@ -67,5 +71,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class);
+    }
+
+    public function donations(): HasMany
+    {
+        return $this->hasMany(Donation::class, 'donor_id');
+    }
+
+    public function canDonate(): bool
+    {
+        return $this->last_donation_at === null
+            || $this->last_donation_at->lte(now()->subMonths(3));
     }
 }
