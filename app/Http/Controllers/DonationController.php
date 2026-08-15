@@ -10,6 +10,8 @@ use App\Models\Donation;
 use App\Models\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use App\Http\Resources\DonationResource;
 
 class DonationController extends Controller
 {
@@ -99,5 +101,27 @@ class DonationController extends Controller
         return response()->json([
             'message' => 'Donation recorded successfully.',
         ], 201);
+    }
+
+    public function history(Request $request): JsonResponse
+    {
+        $donations = $request->user()
+            ->donations()
+            ->with([
+                'bloodRequest:id,hospital_id,blood_type,urgency',
+                'bloodRequest.hospital:id,name,address_text',
+            ])
+            ->latest()
+            ->get([
+                'id',
+                'blood_request_id',
+                'no_of_units_donated',
+                'created_at',
+            ]);
+
+        return response()->json([
+            'message' => 'Donation history retrieved successfully.',
+            'data' => DonationResource::collection($donations),
+        ]);
     }
 }

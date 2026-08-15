@@ -19,6 +19,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/responses/accepted', [ResponseController::class, 'accepted'])->name('responses.accepted');
     Route::post('/blood-requests/{bloodRequest}/donate', [DonationController::class, 'store'])->name('blood-requests.donate');
+    Route::get('/donations/history', [DonationController::class, 'history'])->name('donations.history');
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
