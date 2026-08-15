@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\BloodRequestStatus;
 use App\Enums\ResponseStatus;
+use App\Http\Resources\BloodRequestResource;
 use App\Models\BloodRequest;
 use App\Models\Response;
 use Illuminate\Http\JsonResponse;
@@ -59,6 +60,57 @@ class ResponseController extends Controller
             'message' => 'Blood request rejected successfully.',
             'data' => $response,
         ], 201);
+    }
+
+    public function accepted(Request $request)
+    {
+        $user = $request->user();
+
+        $query = BloodRequest::query()
+            ->with([
+                'hospital:id,name,latitude,longitude,address_text',
+                'requester:id,name',
+            ])
+            ->where('status', BloodRequestStatus::PENDING)
+            ->whereHas('responses', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->where('status', ResponseStatus::ACCEPT);
+            });
+
+        // Calculate distance
+        $query
+            ->select('blood_requests.*')
+            ->selectRaw(
+                'ROUND(
+                ST_Distance_Sphere(
+                    POINT(hospitals.longitude, hospitals.latitude),
+                    POINT(?, ?)
+                ) / 1000,
+                1
+            ) AS distance',
+                [
+                    $user->longitude,
+                    $user->latitude,
+                ]
+            )
+            ->join(
+                'hospitals',
+                'blood_requests.hospital_id',
+                '=',
+                'hospitals.id'
+            )
+            ->orderBy('distance');
+
+        $bloodRequests = $query->get();
+
+        $bloodRequests->each(function ($request) {
+            $request->requested_at = $request->created_at->diffForHumans();
+        });
+
+        return response()->json([
+            'message' => 'Accepted blood requests retrieved successfully.',
+            'data' => BloodRequestResource::collection($bloodRequests),
+        ]);
     }
 
     private function validateResponse($user, BloodRequest $bloodRequest): void

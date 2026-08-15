@@ -16,6 +16,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/blood-requests/{bloodRequest}/accept', [ResponseController::class, 'accept'])->name('blood-requests.accept');
     Route::post('/blood-requests/{bloodRequest}/reject', [ResponseController::class, 'reject'])->name('blood-requests.reject');
 
+    Route::get('/responses/accepted', [ResponseController::class, 'accepted'])->name('responses.accepted');
+
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::patch('/notifications/{notification}', [NotificationController::class, 'markAsRead']);
