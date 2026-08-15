@@ -59,7 +59,10 @@ class BloodRequestController extends Controller
                 'requester:id,name',
             ])
             ->where('status', BloodRequestStatus::PENDING)
-            ->where('requester_id', '!=', $user->id);
+            ->where('requester_id', '!=', $user->id)
+            ->whereDoesntHave('responses', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            });
 
         // Apply show filter
         if ($show === 'compatible') {

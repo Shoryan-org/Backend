@@ -46,4 +46,9 @@ class BloodRequest extends Model
     {
         return $this->hasMany(Notification::class);
     }
+
+    public function responses(): HasMany
+    {
+        return $this->hasMany(Response::class);
+    }
 }
