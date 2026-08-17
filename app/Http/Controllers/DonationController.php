@@ -113,6 +113,7 @@ class DonationController extends Controller
                 'last_donation_at' => now(),
                 'no_of_donations' => $user->no_of_donations + 1,
                 'is_available' => false,
+                'eligibility_notified_at' => null,
             ]);
         });
 

@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'no_of_donations',
     'is_available',
     'fcm_token',
+    'eligibility_notified_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
@@ -45,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_donation_at' => 'datetime',
+            'eligibility_notified_at' => 'datetime',
         ];
     }
 
