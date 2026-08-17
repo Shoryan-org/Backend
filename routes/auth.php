@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\VerifyPasswordResetOtpController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\FcmTokenController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -46,4 +47,12 @@ Route::prefix('auth')->group(function () {
     Route::post('/password-reset', ResetPasswordController::class)
         ->middleware('guest', 'throttle:5,1')
         ->name('password-reset');
+
+    Route::post('/fcm-token', [FcmTokenController::class, 'update'])
+        ->middleware('auth:sanctum')
+        ->name('fcm.update');
+
+    Route::delete('/fcm-token', [FcmTokenController::class, 'destroy'])
+        ->middleware('auth:sanctum')
+        ->name('fcm.delete');
 });

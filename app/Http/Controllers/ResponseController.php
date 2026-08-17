@@ -9,9 +9,14 @@ use App\Models\BloodRequest;
 use App\Models\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\NotificationService;
 
 class ResponseController extends Controller
 {
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
+
     public function accept(
         Request $request,
         BloodRequest $bloodRequest
@@ -35,6 +40,20 @@ class ResponseController extends Controller
             'blood_request_id' => $bloodRequest->id,
             'status' => ResponseStatus::ACCEPT,
         ]);
+
+        // Notify the requester
+        $this->notificationService->sendToUser(
+            $bloodRequest->requester,
+            'Blood Request Accepted',
+            "{$user->name} has accepted your blood request.",
+            'REQUEST_ACCEPTED',
+            $bloodRequest->id,
+            [
+                'type' => 'REQUEST_ACCEPTED',
+                'blood_request_id' => (string) $bloodRequest->id,
+                'donor_id' => (string) $user->id,
+            ]
+        );
 
         return response()->json([
             'message' => 'Blood request accepted successfully.',

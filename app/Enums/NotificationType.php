@@ -4,7 +4,8 @@ namespace App\Enums;
 
 enum NotificationType: string
 {
-    case DONATION_ACCEPTED = 'donation_accepted';
-    case DONATION_REMINDER = 'donation_reminder';
-    case DONATION_MATCHED = 'donation_matched';
+    case DONATION_REMINDER = 'DONATION_REMINDER';
+    case DONATION_MATCHED = 'DONATION_MATCHED';
+    case REQUEST_ACCEPTED = 'REQUEST_ACCEPTED';
+    case REQUEST_FULFILLED = 'REQUEST_FULFILLED';
 }

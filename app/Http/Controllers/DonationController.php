@@ -12,9 +12,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Http\Resources\DonationResource;
+use App\Services\NotificationService;
 
 class DonationController extends Controller
 {
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
+
     public function store(
         StoreDonationRequest $request,
         BloodRequest $bloodRequest
@@ -89,12 +94,26 @@ class DonationController extends Controller
                 $bloodRequest->update([
                     'status' => BloodRequestStatus::FULFILLED,
                 ]);
+
+                // notify the requester
+                $this->notificationService->sendToUser(
+                    $bloodRequest->requester,
+                    'Blood Request Fulfilled',
+                    'Your blood request has been fulfilled successfully.',
+                    'REQUEST_FULFILLED',
+                    $bloodRequest->id,
+                    [
+                        'type' => 'REQUEST_FULFILLED',
+                        'blood_request_id' => (string) $bloodRequest->id,
+                    ]
+                );
             }
 
             $user->update([
                 'last_donation_at' => now(),
                 'no_of_donations' => $user->no_of_donations + 1,
                 'is_available' => false,
+                'eligibility_notified_at' => null,
             ]);
         });
 
