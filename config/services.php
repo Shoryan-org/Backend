@@ -34,8 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'chatbot'=>[
-        'url'=>env('Chatbot_Url'),
+    'ai-services'=>[
+        'url'=>env('AI_SERVICES_URL'),
     ],
 
     'firebase' => [

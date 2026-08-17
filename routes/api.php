@@ -7,6 +7,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ResponseController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\DonorAvailabilityController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/auth/me', RegisteredUserDataController::class)->name('auth.me');
@@ -27,6 +28,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/chatbot', [ChatbotController::class, 'sendMessage']);
     Route::get('/chatbot/messages', [ChatbotController::class, 'retrieveMessages']);
+
+    Route::get('/smart-matching', [DonorAvailabilityController::class, 'check']);
 });
 
 require __DIR__ . '/auth.php';
