@@ -38,4 +38,8 @@ return [
         'url'=>env('Chatbot_Url'),
     ],
 
+    'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];
