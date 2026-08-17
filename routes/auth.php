@@ -52,9 +52,7 @@ Route::prefix('auth')->group(function () {
         ->middleware('auth:sanctum')
         ->name('fcm.update');
 
-    Route::delete('/fcm-token', [FcmTokenController::class, 'delete'])
+    Route::delete('/fcm-token', [FcmTokenController::class, 'destroy'])
         ->middleware('auth:sanctum')
         ->name('fcm.delete');
-
-    Route::delete('/fcm-token', [FcmTokenController::class, 'destroy']);
 });
