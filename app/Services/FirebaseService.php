@@ -12,10 +12,14 @@ class FirebaseService
 
     public function __construct()
     {
+        $credentials = config('services.firebase.credentials');
+
+        if (is_file(base_path($credentials))) {
+            $credentials = base_path($credentials);
+        }
+
         $factory = (new Factory)
-            ->withServiceAccount(
-                base_path(config('services.firebase.credentials'))
-            );
+            ->withServiceAccount($credentials);
 
         $this->messaging = $factory->createMessaging();
     }

@@ -1,58 +1,153 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Shoryan — Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The backend/API for **Shoryan**, a blood donation matching platform. It is a Laravel 13 (PHP 8.3+) REST API that powers the Shoryan mobile client.
 
-## About Laravel
+> The API is served under the prefix **`/my-api`**, not `/api` (set in `bootstrap/app.php`).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Libraries Used
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **PHP ^8.3** — language runtime
+- **laravel/framework ^13.8** — core framework (routing, Eloquent, validation, cache)
+- **laravel/sanctum ^4.0** — bearer token auth for the mobile client
+- **kreait/firebase-php** — Firebase Admin SDK; used by `FirebaseService` to send FCM push notifications
+- **propaganistas/laravel-phone** — Egyptian mobile number validation (`phone:EG,mobile`)
+- **resend/resend-laravel** — mail transport used for sending OTP emails (`MAIL_MAILER=resend`, via the Resend API)
 
-## Learning Laravel
+**Database:** MySQL, hosted on **Aiven** (managed cloud MySQL), connected over TLS using the bundled `database/certs/ca.pem` CA certificate (referenced via `MYSQL_ATTR_SSL_CA`).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**Cache:** Laravel's cache system (database driver by default) — used for OTP storage
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Project File Structure
 
-## Agentic Development
+```text
+app/
+├── Enums/             → BloodRequestStatus, BloodRequestUrgency,
+│                         NotificationType (DONATION_REMINDER, DONATION_MATCHED,
+│                         REQUEST_ACCEPTED, REQUEST_FULFILLED), ResponseStatus
+├── Console/Commands/   → SendDonationReminders (scheduled, daily 09:00)
+├── Http/
+│   ├── Controllers/
+│   │   ├── Auth/       → Registration, login, logout, OTP verify/resend,
+│   │   │                 password reset, FcmTokenController
+│   │   ├── BloodRequestController.php
+│   │   ├── ChatbotController.php
+│   │   ├── DonationController.php
+│   │   ├── NotificationController.php
+│   │   └── ResponseController.php
+│   ├── Middleware/     → EnsureEmailIsVerified
+│   ├── Requests/       → Auth/, StoreBloodRequestRequest, StoreDonationRequest,
+│   │                     StoreMessageRequest, IndexBloodRequestRequest,
+│   │                     StoreResponseRequest (unused)
+│   └── Resources/      → BloodRequestResource, DonationResource
+├── Mail/               → SendRegistrationOtpMail, SendPasswordResetOtpMail
+├── Models/             → User (now incl. fcm_token, eligibility_notified_at),
+│                         BloodRequest, Hospital, Response, Donation,
+│                         Notification, Message
+├── Providers/          → AppServiceProvider
+└── Services/           → FirebaseService (sends FCM message),
+                          NotificationService (creates DB notification + triggers push)
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+config/                 → app, auth, cache, cors, database, mail, sanctum,
+                          services (incl. firebase.credentials), etc.
 
-```bash
-composer require laravel/boost --dev
+database/
+├── certs/ca.pem        → TLS CA cert for the Aiven-hosted MySQL connection
+├── factories/, migrations/ (incl. add fcm_token + eligibility_notified_at to users)
+└── seeders/
 
-php artisan boost:install
+routes/
+├── api.php             → authenticated (Sanctum) endpoints
+├── auth.php            → register/login/logout/OTP/password-reset/fcm-token
+├── console.php         → schedules SendDonationReminders
+└── web.php
+
+resources/views/emails/ → OTP email templates
+api/index.php, vercel.json → Vercel deployment entry point/config
+tests/                  → default scaffolding only, no real coverage yet
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## App Flow
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Register** — `POST /my-api/auth/register` → validates input, hashes password, generates a 4-digit OTP, caches it (3 min TTL) alongside the pending user data, sends the OTP via email, and returns a `verification_id` (UUID) in the response — **no user is created yet at this point**.
+  ```json
+  {
+      "message": "OTP sent to your email. Please verify to complete registration.",
+      "verification_id": "9c3b6c2a-2f2f-4e3e-9a2f-7a2e2b2f6d9a"
+  }
+  ```
+  The client must hold onto this `verification_id` and submit it together with the OTP to complete registration.
+- **Verify Email** — `POST /my-api/auth/register/verify-email` → takes `verification_id` + `otp`; on success, creates the `User`, marks the email as verified, and issues a Sanctum `token`. On failure (expired/mismatched OTP), returns `400`.
+- **Resend OTP** — `POST /my-api/auth/resend-registration-otp` → takes the same `verification_id`, re-generates and re-sends a new OTP for it if the original expired or wasn't received (rate-limited to 1 request/minute).
+- **Login** → validate credentials → rate-limited → Sanctum token issued
+- **Logout** → revokes only the current token
+- **Blood Requests** → create (hospital + request in one transaction) → list nearby/compatible/critical (10km radius) → no update/cancel/show endpoints exist
+- **Responses** → donor accepts/rejects a request (compatibility check on accept) → on accept, notifies the requester (`REQUEST_ACCEPTED`: DB row + FCM push if they have a token)
+- **Donations** → donor must have accepted + be eligible (3-month rule) → records donation → auto-marks request `FULFILLED` when units met → notifies requester (`REQUEST_FULFILLED`) → resets donor's `eligibility_notified_at`
+- **Notifications** → every notification is a DB row (`NotificationService`); if the user has an `fcm_token`, a push is also sent via `FirebaseService` → list / mark-read / mark-all-read
+- **FCM Token** → client registers device token (`POST /my-api/auth/fcm-token`) / clears it (`DELETE`)
+- **Donation Reminders** → daily scheduled command finds donors eligible again (3 months since last donation, not yet notified) → notifies them (`DONATION_REMINDER`) → marks them available again
+- **Chatbot** → proxies message to an external chatbot HTTP service → stores Q&A pair → returns answer
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Installation
 
-## Security Vulnerabilities
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/Shoryan-org/Backend.git
+   cd Backend
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
 
-## License
+3. **Set up environment**
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in:
+   - **Database (Aiven MySQL):** `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` from your Aiven service, plus `MYSQL_ATTR_SSL_CA` pointing to the bundled `database/certs/ca.pem` (Aiven requires TLS).
+   - **Mail (Resend):** set `MAIL_MAILER=resend` and add `RESEND_API_KEY` (not present in `.env.example` — add it manually) with your Resend API key. This is what actually delivers the registration/password-reset OTP emails.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+   Also manually add these (not present in `.env.example`):
+   - `Chatbot_Url` — the external chatbot service URL
+   - `FIREBASE_CREDENTIALS` — path to (or contents of) your Firebase service-account JSON — **never commit this file**
+
+4. **Generate application key**
+   ```bash
+   php artisan key:generate
+   ```
+
+5. **Run migrations**
+   ```bash
+   php artisan migrate
+   ```
+
+6. **Run the server**
+   ```bash
+   php artisan serve
+   ```
+   API available at `http://127.0.0.1:8000/my-api/...`
+
+---
+
+## How to Use (Steps)
+
+1. Register (`POST /my-api/auth/register`) → get `verification_id`
+2. Verify email OTP (`POST /my-api/auth/register/verify-email`) → get bearer `token`
+3. Attach `Authorization: Bearer <token>` to all further requests
+4. Register your device's FCM token (`POST /my-api/auth/fcm-token`) if you want push notifications
+5. Create a blood request, or browse nearby ones (`GET /my-api/blood-requests?show=compatible|critical`)
+6. Accept/reject a request as a donor — the requester gets notified (DB + push)
+7. Donate against an accepted request (`POST /my-api/blood-requests/{id}/donate`) — requester gets notified again if fulfilled
+8. Check notifications and donation history
+9. Chat with the assistant (`POST /my-api/chatbot`)
+10. Clear your FCM token on logout (`DELETE /my-api/auth/fcm-token`)
