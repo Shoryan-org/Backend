@@ -28,6 +28,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_available',
     'fcm_token',
     'eligibility_notified_at',
+    'weight',
+    'date_of_birth',
+    'gender',
+    'hemoglobin',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
@@ -47,6 +51,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'last_donation_at' => 'datetime',
             'eligibility_notified_at' => 'datetime',
+            'date_of_birth' => 'date',
+            'weight' => 'decimal:2',
+            'hemoglobin' => 'decimal:1',
         ];
     }
 

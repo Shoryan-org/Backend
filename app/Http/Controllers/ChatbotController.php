@@ -12,7 +12,7 @@ class ChatbotController extends Controller
   public function sendMessage(StoreMessageRequest $request): JsonResponse{
     $user=$request->user();
     $valid=$request->validated();
-$response=Http::post(config('services.chatbot.url' ).'/chat',
+$response=Http::post(config('services.ai-services.url' ).'/chat',
    [ 'message'=>$valid['message'],
     'session_id'=>$valid['session_id']??null,]
 );
