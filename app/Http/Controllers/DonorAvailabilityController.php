@@ -18,141 +18,43 @@ class DonorAvailabilityController extends Controller
         if ($bloodRequest->requester_id !== auth()->id()) {
             abort(403, 'You are not authorized to notify donors for this blood request.');
         }
+        
+        $users = User::query()
+            ->whereNotNull('date_of_birth')
+            ->whereNotNull('weight')
+            ->whereNotNull('hemoglobin')
+            ->whereNotNull('gender')
+            ->get();
 
-        // $users = User::query()
-        //     ->whereNotNull('date_of_birth')
-        //     ->whereNotNull('weight')
-        //     ->whereNotNull('hemoglobin')
-        //     ->whereNotNull('gender')
-        //     ->get();
-
-        // $usersData = $users->map(function (User $user) {
-        //     return [
-        //         'user_id' => (string) $user->id,
-        //         'age' => $user->date_of_birth->age,
-        //         'total_donations' => $user->no_of_donations,
-        //         'weight_kg' => $user->weight,
-        //         'hemoglobin_g_dL' => $user->hemoglobin,
-        //         'gender' => ucfirst(strtolower($user->gender)),
-        //         'blood_group' => $user->blood_type,
-        //         'city' => 'Cairo',
-        //         'state' => 'Cairo',
-        //         'donation_center' => 'Egyptian Red Crescent',
-        //         'country' => 'Egypt',
-        //     ];
-        // })->values()->all();
+        $usersData = $users->map(function (User $user) {
+            return [
+                'user_id' => (string) $user->id,
+                'age' => $user->date_of_birth->age,
+                'total_donations' => $user->no_of_donations,
+                'weight_kg' => $user->weight,
+                'hemoglobin_g_dL' => $user->hemoglobin,
+                'gender' => ucfirst(strtolower($user->gender)),
+                'blood_group' => $user->blood_type,
+                'city' => 'Cairo',
+                'state' => 'Cairo',
+                'donation_center' => 'Egyptian Red Crescent',
+                'country' => 'Egypt',
+            ];
+        })->values()->all();
 
 
-        // $response = Http::post(
-        //     config('services.ai-services.url') . '/availability',
-        //     [
-        //         'users' => $usersData,
-        //     ]
-        // );
+        $response = Http::post(
+            config('services.ai-services.url') . '/availability',
+            [
+                'users' => $usersData,
+            ]
+        );
 
-        // $response->throw();
+        $response->throw();
 
-        $response = [
-            'message' => 'Available donors retrieved successfully.',
-            'data' => [
-                'available_users' => [
-                    [
-                        'user' => [
-                            'user_id' => '1',
-                            'age' => 30,
-                            'total_donations' => 0,
-                            'weight_kg' => 72.5,
-                            'hemoglobin_g_dL' => 15,
-                            'gender' => 'Male',
-                            'blood_group' => 'O+',
-                            'city' => 'Cairo',
-                            'state' => 'Cairo',
-                            'donation_center' => 'Egyptian Red Crescent',
-                            'country' => 'Egypt',
-                        ],
-                        'available' => true,
-                        'probability' => 0.7468907412760004,
-                    ],
-                    [
-                        'user' => [
-                            'user_id' => '2',
-                            'age' => 26,
-                            'total_donations' => 0,
-                            'weight_kg' => 65,
-                            'hemoglobin_g_dL' => 13.8,
-                            'gender' => 'Female',
-                            'blood_group' => 'A+',
-                            'city' => 'Cairo',
-                            'state' => 'Cairo',
-                            'donation_center' => 'Egyptian Red Crescent',
-                            'country' => 'Egypt',
-                        ],
-                        'available' => true,
-                        'probability' => 0.7483531165037647,
-                    ],
-                    [
-                        'user' => [
-                            'user_id' => '3',
-                            'age' => 34,
-                            'total_donations' => 0,
-                            'weight_kg' => 80,
-                            'hemoglobin_g_dL' => 15.5,
-                            'gender' => 'Male',
-                            'blood_group' => 'O-',
-                            'city' => 'Cairo',
-                            'state' => 'Cairo',
-                            'donation_center' => 'Egyptian Red Crescent',
-                            'country' => 'Egypt',
-                        ],
-                        'available' => true,
-                        'probability' => 0.7436740983067608,
-                    ],
-                    [
-                        'user' => [
-                            'user_id' => '4',
-                            'age' => 24,
-                            'total_donations' => 0,
-                            'weight_kg' => 58.5,
-                            'hemoglobin_g_dL' => 12.9,
-                            'gender' => 'Female',
-                            'blood_group' => 'B+',
-                            'city' => 'Cairo',
-                            'state' => 'Cairo',
-                            'donation_center' => 'Egyptian Red Crescent',
-                            'country' => 'Egypt',
-                        ],
-                        'available' => true,
-                        'probability' => 0.7501840541270853,
-                    ],
-                    [
-                        'user' => [
-                            'user_id' => '6',
-                            'age' => 28,
-                            'total_donations' => 2,
-                            'weight_kg' => 68,
-                            'hemoglobin_g_dL' => 13.5,
-                            'gender' => 'Male',
-                            'blood_group' => 'A+',
-                            'city' => 'Cairo',
-                            'state' => 'Cairo',
-                            'donation_center' => 'Egyptian Red Crescent',
-                            'country' => 'Egypt',
-                        ],
-                        'available' => true,
-                        'probability' => 0.7433181362337784,
-                    ],
-                ],
-                'available_ids' => ['1', '2', '3', '4', '6'],
-                'summary' => [
-                    'total_checked' => 5,
-                    'available_count' => 5,
-                    'unavailable_count' => 0,
-                ],
-            ],
-        ];
 
         $availableIds = collect(
-            $response['data']['available_ids']
+            $response->json('available_ids', [])
         )->map(fn($id) => (int) $id);
 
         if ($availableIds->isEmpty()) {
