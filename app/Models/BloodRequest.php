@@ -58,4 +58,18 @@ class BloodRequest extends Model
     {
         return $this->hasMany(Donation::class);
     }
+
+    public function compatibleDonorBloodTypes(): array
+    {
+        return match ($this->blood_type) {
+            'A+' => ['A+', 'A-', 'O+', 'O-'],
+            'A-' => ['A-', 'O-'],
+            'B+' => ['B+', 'B-', 'O+', 'O-'],
+            'B-' => ['B-', 'O-'],
+            'AB+' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            'AB-' => ['A-', 'B-', 'AB-', 'O-'],
+            'O+' => ['O+', 'O-'],
+            'O-' => ['O-'],
+        };
+    }
 }

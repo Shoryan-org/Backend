@@ -29,7 +29,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/chatbot', [ChatbotController::class, 'sendMessage']);
     Route::get('/chatbot/messages', [ChatbotController::class, 'retrieveMessages']);
 
-    Route::get('/smart-matching', [DonorAvailabilityController::class, 'check']);
+    Route::get('/my-blood-requests', [BloodRequestController::class, 'myRequests']);
+    Route::get('/blood-requests/{bloodRequest}/available-donors',[DonorAvailabilityController::class, 'check']);
 });
 
 require __DIR__ . '/auth.php';

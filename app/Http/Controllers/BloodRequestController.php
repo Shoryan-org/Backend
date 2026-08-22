@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\IndexBloodRequestRequest;
 use App\Http\Resources\BloodRequestResource;
+use Illuminate\Http\Request;
 
 class BloodRequestController extends Controller
 {
@@ -121,6 +122,23 @@ class BloodRequestController extends Controller
         return response()->json([
             'message' => 'Blood requests retrieved successfully.',
             'data' => BloodRequestResource::collection($bloodRequests),
+        ]);
+    }
+
+    public function myRequests(Request $request): JsonResponse
+    {
+        $bloodRequests = BloodRequest::where(
+            'requester_id',
+            $request->user()->id
+        )->get();
+
+        $bloodRequests->each(function ($request) {
+            $request->requested_at = $request->created_at->diffForHumans();
+        });
+        
+        return response()->json([
+            'message' => 'User blood requests retrieved successfully.',
+            'data' => $bloodRequests,
         ]);
     }
 }
