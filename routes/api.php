@@ -30,7 +30,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/chatbot/messages', [ChatbotController::class, 'retrieveMessages']);
 
     Route::get('/my-blood-requests', [BloodRequestController::class, 'myRequests']);
-    Route::get('/blood-requests/{bloodRequest}/available-donors',[DonorAvailabilityController::class, 'check']);
+    Route::get('/blood-requests/{bloodRequest}/available-donors', [DonorAvailabilityController::class, 'check']);
+    Route::post('/blood-requests/{bloodRequest}/notify-donors', [DonorAvailabilityController::class, 'notifyDonors']);
 });
 
 require __DIR__ . '/auth.php';
