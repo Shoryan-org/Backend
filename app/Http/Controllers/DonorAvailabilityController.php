@@ -139,7 +139,7 @@ class DonorAvailabilityController extends Controller
         $availableDonorsResponse = $this->check($bloodRequest);
 
         // Extract donors from the response
-        $donors = $availableDonorsResponse->getData(true)['data']['available_users'];
+        $donors = $availableDonorsResponse->getData(true)['data']['available_ids'];
 
         if (empty($donors)) {
             return response()->json([
