@@ -15,6 +15,10 @@ class DonorAvailabilityController extends Controller
     {
         $DISTANCE_THRESHOLD = 10000;
 
+        if ($bloodRequest->requester_id !== auth()->id()) {
+            abort(403, 'You are not authorized to notify donors for this blood request.');
+        }
+        
         $users = User::query()
             ->whereNotNull('date_of_birth')
             ->whereNotNull('weight')
