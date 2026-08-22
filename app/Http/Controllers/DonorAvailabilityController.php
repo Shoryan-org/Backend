@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use App\Models\User;
+use App\Services\NotificationService;
 
 class DonorAvailabilityController extends Controller
 {
@@ -116,6 +117,66 @@ class DonorAvailabilityController extends Controller
                 'available_users' => $donors,
                 'available_ids' => $donors->pluck('id')->values(),
                 'count' => $donors->count(),
+            ],
+        ]);
+    }
+
+    public function notifyDonors(
+        BloodRequest $bloodRequest,
+        NotificationService $notificationService
+    ): JsonResponse {
+
+        // Make sure the authenticated user owns this blood request
+        if ($bloodRequest->requester_id !== auth()->id()) {
+            abort(403, 'You are not authorized to notify donors for this blood request.');
+        }
+
+        // Get the available donors
+        $availableDonorsResponse = $this->check($bloodRequest);
+
+        // Extract donors from the response
+        $donors = $availableDonorsResponse->getData(true)['data']['available_users'];
+
+        if (empty($donors)) {
+            return response()->json([
+                'message' => 'No available donors to notify.',
+                'data' => [
+                    'notified_count' => 0,
+                ],
+            ]);
+        }
+
+        $notifiedCount = 0;
+
+        foreach ($donors as $donor) {
+            $user = User::find($donor['id']);
+
+            if (!$user) {
+                continue;
+            }
+
+            $notificationService->sendToUser(
+                $user,
+                'Blood Donation Request Near You',
+                "Someone needs {$bloodRequest->blood_type} blood.",
+                'DONATION_MATCHED',
+                $bloodRequest->id,
+                [
+                    'blood_type' => $bloodRequest->blood_type,
+                    'units_needed' => (string) $bloodRequest->no_of_units,
+                    'units_donated' => (string) $bloodRequest->no_of_units_donated,
+                    'hospital' => (string) $bloodRequest->hospital,
+                    'type' => 'DONATION_MATCHED'
+                ]
+            );
+
+            $notifiedCount++;
+        }
+
+        return response()->json([
+            'message' => 'Available donors notified successfully.',
+            'data' => [
+                'notified_count' => $notifiedCount,
             ],
         ]);
     }
