@@ -18,7 +18,7 @@ class DonorAvailabilityController extends Controller
         if ($bloodRequest->requester_id !== auth()->id()) {
             abort(403, 'You are not authorized to notify donors for this blood request.');
         }
-        
+
         $users = User::query()
             ->whereNotNull('date_of_birth')
             ->whereNotNull('weight')
@@ -141,7 +141,10 @@ class DonorAvailabilityController extends Controller
         // Extract donors from the response
         $donors = $availableDonorsResponse->getData(true)['data']['available_ids'];
 
-        if (empty($donors)) {
+        $donorIds = $availableDonorsResponse
+            ->getData(true)['data']['available_ids'];
+
+        if (empty($donorIds)) {
             return response()->json([
                 'message' => 'No available donors to notify.',
                 'data' => [
@@ -152,8 +155,8 @@ class DonorAvailabilityController extends Controller
 
         $notifiedCount = 0;
 
-        foreach ($donors as $donor) {
-            $user = User::find($donor['id']);
+        foreach ($donorIds as $donorId) {
+            $user = User::find($donorId);
 
             if (!$user) {
                 continue;
